@@ -1,6 +1,10 @@
 ﻿using OrderGiv3r.Bot;
+using System.Text;
 using Telegram.Bot;
 using WTelegram;
+
+Console.InputEncoding = Encoding.UTF8;
+Console.OutputEncoding = Encoding.UTF8;
 
 // Bot
 TelegramBotClient bot = new TelegramBotClient(BotToken);

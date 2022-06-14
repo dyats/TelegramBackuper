@@ -2,6 +2,7 @@
 using HtmlAgilityPack;
 using OrderGiv3r.VideoDownloader;
 
+Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
 
 var web = new HtmlWeb();
