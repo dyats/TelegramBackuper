@@ -10,6 +10,7 @@ var document = web.Load(Url);
 var decodedHtmlComponent = document.GetHtmlComponent();
 var url = decodedHtmlComponent.GetLinkFromComponent();
 
-await DownloadFileAsync(url, PathToDownload);
+var client = CreateHttpClient();
+await client.DownloadFileAsync(url, PathToDownload);
 
 Console.ReadLine();

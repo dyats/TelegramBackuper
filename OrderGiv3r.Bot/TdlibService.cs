@@ -29,15 +29,15 @@ public class TdlibService
         return chat;
     }
 
-    public async Task<List<string>> GetMessagesFromChatAsync(ChatBase chat)
+    public async Task<List<Message>> GetMessagesFromChatAsync(ChatBase chat)
     {
-        var messagesInChat = new List<string>();
+        var messages = new List<Message>();
 
         var messageBases = await _client.Messages_GetHistory(chat.ToInputPeer());
         foreach (var messageBase in messageBases.Messages.OrderBy(x => x.Date))
             if (messageBase is Message message)
-                messagesInChat.Add(message.message);
+                messages.Add(message);
 
-        return messagesInChat;
+        return messages;
     }
 }
