@@ -12,7 +12,7 @@ BotService botService = new BotService(bot);
 
 
 
-// Tdlib
+// Telegram API
 using Client ordergiverClient = new Client(OrderGiv3rConfig);
 var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");

@@ -8,9 +8,8 @@ Console.OutputEncoding = Encoding.UTF8;
 var web = new HtmlWeb();
 var document = web.Load(Url);
 var decodedHtmlComponent = document.GetHtmlComponent();
-var link = decodedHtmlComponent.GetLinkFromComponent();
+var url = decodedHtmlComponent.GetLinkFromComponent();
 
-var httpClient = new HttpClient();
-await httpClient.DownloadFileAsync(new Uri(link), PathToDownload);
+await DownloadFileAsync(url, PathToDownload);
 
 Console.ReadLine();

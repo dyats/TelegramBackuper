@@ -24,7 +24,7 @@ public class TdlibService
     public async Task<ChatBase?> GetChatByNameAsync(string chatName)
     {
         var usersChats = await GetAllChatsAsync();
-        var chat = usersChats.chats.FirstOrDefault(x => x.Value.Title == chatName).Value;
+        var chat = usersChats.chats.FirstOrDefault(x => x.Value.Title.ToLower() == chatName.ToLower()).Value;
 
         return chat;
     }

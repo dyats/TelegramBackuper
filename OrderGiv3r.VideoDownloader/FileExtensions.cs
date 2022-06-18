@@ -1,33 +1,31 @@
-﻿using System.Net;
+﻿using System.Net.Http.Handlers;
 
 namespace OrderGiv3r.VideoDownloader;
 
 public static class FileExtensions
 {
-    public static async Task DownloadFileAsync(this HttpClient httpClient, Uri uri, string fileName)
+    public static async Task DownloadFileAsync(string url, string pathToDownload)
     {
-        await using var s = await httpClient.GetStreamAsync(uri);
-        await using var fs = new FileStream(fileName, FileMode.CreateNew);
-        await s.CopyToAsync(fs);
-    }
-
-    private static async Task DownloadFileWithWebClientAsync()
-    {
-        var downloadedPercents = 0;
-
-        using (var client = new WebClient())
+        var handler = new HttpClientHandler() { AllowAutoRedirect = true };
+        var ph = new ProgressMessageHandler(handler);
+        
+        decimal? percentageProgress = 0;
+        ph.HttpReceiveProgress += (_, args) =>
         {
-            client.DownloadProgressChanged += ProgressChanged;
-            client.DownloadFileAsync(new Uri(Url), PathToDownload);
-        }
+            var downloadedProgress = (double)args.BytesTransferred / args.TotalBytes * 100;
+            var currentPercentage = Math.Round(Convert.ToDecimal(downloadedProgress), 0);
 
-        void ProgressChanged(object sender, DownloadProgressChangedEventArgs eventArgs)
-        {
-            if (eventArgs.ProgressPercentage != downloadedPercents)
+            if (percentageProgress.Value != currentPercentage)
             {
-                downloadedPercents = eventArgs.ProgressPercentage;
-                Console.WriteLine(downloadedPercents);
+                percentageProgress = currentPercentage;
+                Console.WriteLine($"Downloaded: {currentPercentage}%");
             }
-        }
+        };
+
+        var httpClient = new HttpClient(ph);
+        
+        await using var s = await httpClient.GetStreamAsync(new Uri(url));
+        await using var fs = new FileStream(pathToDownload, FileMode.Create);
+        await s.CopyToAsync(fs);
     }
 }
