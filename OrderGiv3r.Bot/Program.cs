@@ -19,11 +19,16 @@ var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");
 
 TdlibService tdlibService = new TdlibService(ordergiverClient, user);
-var channel = await tdlibService.GetChatByNameAsync("fuck");
+var channelName = ChannelName;
+var channel = await tdlibService.GetChatByNameAsync(channelName);
+if (channel is null)
+{
+    throw new Exception($"Channel \"{channelName}\" does not exist.");
+}
 var messages = await tdlibService.GetMessagesFromChatAsync(channel);
 
 var desktopLocation = @$"{DesktopPath}Telegram Channels Backup\";
-var newDirectory = $@"'{channel.Title}'";
+var newDirectory = $@"{channel.Title}";
 var destination = desktopLocation + newDirectory;
 
 foreach (var message in messages)
@@ -39,7 +44,7 @@ foreach (var message in messages)
         {
             Console.WriteLine("Downloading video" + fileName);
             await using var fileStream = File.Create(GeneratePathToDownload(videosDestination, fileName));
-            await ordergiverClient.DownloadFileAsync(document, fileStream);
+            var type = await ordergiverClient.DownloadFileAsync(document, fileStream);
             Console.WriteLine("Download of the video finished");
         }
     }
