@@ -6,11 +6,11 @@ Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
 
 var web = new HtmlWeb();
-var document = web.Load(Url);
-var decodedHtmlComponent = document.GetHtmlComponent();
-var url = decodedHtmlComponent.GetLinkFromComponent();
-
+var url = BaseUrl + VideoNumber;
+var document = web.Load(url);
+var downloadFromUrl = document.GetUrlForDownload();
+var pathToDownload = DesktopPath + VideoNumber + VideoFormat;
 var client = CreateHttpClient();
-await client.DownloadFileAsync(url, PathToDownload);
+await client.DownloadFileAsync(downloadFromUrl, pathToDownload);
 
 Console.ReadLine();

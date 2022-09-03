@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Handlers;
-
-namespace OrderGiv3r.VideoDownloader;
+﻿namespace OrderGiv3r.VideoDownloader;
 
 public static class FileExtensions
 {
