@@ -1,14 +1,31 @@
-﻿namespace OrderGiv3r.Bot;
+﻿using Microsoft.Extensions.Configuration;
 
-public static class Config
+namespace OrderGiv3r.Bot;
+
+public class OrderGiv3rConfig
 {
-    public static string OrderGiv3rConfig(string what)
+    public static string ApiId;
+    public static string ApiHash;
+    public static string PhoneNumber;
+    public static string Password;
+
+
+    public OrderGiv3rConfig(IConfigurationRoot appConfig)
     {
-        if (what == "api_id") return ApiId;
-        if (what == "api_hash") return ApiHash;
-        if (what == "phone_number") return PhoneNumber;
-        if (what == "verification_code") return null; // let WTelegramClient ask the user with a console prompt 
-        if (what == "password") return Password;     // if user has enabled 2FA
-        return null;
+        ApiId = appConfig["ApiId"];
+        ApiHash = appConfig["ApiHash"];
+        PhoneNumber = appConfig["PhoneNumber"];
+        Password = appConfig["Password"];
     }
+
+    public string GetConfig(string what) =>
+        what switch
+        {
+            "api_id" => ApiId,
+            "api_hash" => ApiHash,
+            "phone_number" => PhoneNumber,
+            "verification_code" => null,  // let WTelegramClient ask the user with a console prompt 
+            "password" => Password,// if user has enabled 2FA
+            _ => null
+        };
 }

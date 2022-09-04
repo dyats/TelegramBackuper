@@ -1,4 +1,5 @@
-﻿using OrderGiv3r.Bot;
+﻿using Microsoft.Extensions.Configuration;
+using OrderGiv3r.Bot;
 using System.Text;
 using Telegram.Bot;
 using TL;
@@ -7,19 +8,24 @@ using WTelegram;
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
 
+var appConfig = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false)
+            .Build();
+
 // Bot
-TelegramBotClient bot = new TelegramBotClient(BotToken);
+TelegramBotClient bot = new TelegramBotClient(appConfig["BotToken"]);
 BotService botService = new BotService(bot);
 
-
+var orderGiv3rConfig = new OrderGiv3rConfig(appConfig);
 
 // Telegram API
-using Client ordergiverClient = new Client(OrderGiv3rConfig);
+using Client ordergiverClient = new Client(orderGiv3rConfig.GetConfig);
 var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");
 
 TdlibService tdlibService = new TdlibService(ordergiverClient, user);
-var channelName = ChannelName;
+var channelName = appConfig["ChannelName"];
 var channel = await tdlibService.GetChatByNameAsync(channelName);
 if (channel is null)
 {
@@ -27,7 +33,7 @@ if (channel is null)
 }
 var messages = await tdlibService.GetMessagesFromChatAsync(channel);
 
-var desktopLocation = @$"{DesktopPath}Telegram Channels Backup\";
+var desktopLocation = @$"{appConfig["PathToDownload"]}Telegram Channels Backup\";
 var newDirectory = $@"{channel.Title}";
 var destination = desktopLocation + newDirectory;
 
@@ -37,7 +43,7 @@ foreach (var message in messages)
     {
         var videosDestination = @$"{destination}\Videos";
         Directory.CreateDirectory(videosDestination);
-            
+
         int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
         var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
         if (Directory.GetFiles(videosDestination, document.id + ".*").Length == 0)
@@ -48,11 +54,11 @@ foreach (var message in messages)
             Console.WriteLine("Download of the video finished");
         }
     }
-    else if(message.media is MessageMediaPhoto { photo: Photo photo })
+    else if (message.media is MessageMediaPhoto { photo: Photo photo })
     {
         var photosDestionation = @$"{destination}\Photos";
         Directory.CreateDirectory(photosDestionation);
-            
+
         var fileName = $@"{photo.id}.jpg";
         if (Directory.GetFiles(photosDestionation, photo.id + ".*").Length == 0)
         {
@@ -61,8 +67,8 @@ foreach (var message in messages)
             var type = await ordergiverClient.DownloadFileAsync(photo, fs);
             fs.Close();
             Console.WriteLine("Download oh the photo finished.");
-            if(type is not Storage_FileType.unknown and not Storage_FileType.partial)
-                File.Move(GeneratePathToDownload(photosDestionation, fileName),  GeneratePathToDownload(photosDestionation, photo.id.ToString(), type.ToString()), true); // rename extension
+            if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
+                File.Move(GeneratePathToDownload(photosDestionation, fileName), GeneratePathToDownload(photosDestionation, photo.id.ToString(), type.ToString()), true); // rename extension
         }
     }
 }
