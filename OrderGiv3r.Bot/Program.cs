@@ -23,7 +23,7 @@ var orderGiv3rConfig = new OrderGiv3rConfig(appConfig);
 
 // Telegram API
 using Client ordergiverClient = new Client(orderGiv3rConfig.GetConfig);
-WTelegram.Helpers.Log = (i, s1) => { };
+WTelegram.Helpers.Log = (i, s1) => { }; // Filter logs a little bit
 var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");
 
