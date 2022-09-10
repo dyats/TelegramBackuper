@@ -1,8 +1,9 @@
 ﻿using HtmlAgilityPack;
+using OrderGiv3r.VideoDownloader.Interfaces;
 
 namespace OrderGiv3r.VideoDownloader;
 
-public class VideoDownloaderService
+public class VideoDownloaderService : IVideoDownloaderService
 {
     private readonly HtmlWeb _web;
 

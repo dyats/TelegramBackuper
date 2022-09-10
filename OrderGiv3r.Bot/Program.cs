@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using OrderGiv3r.Bot;
 using OrderGiv3r.VideoDownloader;
+using OrderGiv3r.VideoDownloader.Interfaces;
 using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
@@ -108,7 +109,7 @@ await using (var linksStream = new FileStream(linksDestination, FileMode.Create)
     }
 }
 
-var videoDownloader = new VideoDownloaderService();
+IVideoDownloaderService videoDownloader = new VideoDownloaderService();
 foreach(var number in videoNumbers)
 {
     var siteDownloadsDestination = @$"{destination}\Videos\{appConfig["SiteName"]}";
