@@ -29,11 +29,11 @@ public class TdlibService
         return chat;
     }
 
-    public async Task<List<Message>> GetMessagesFromChatAsync(ChatBase chat)
+    public async Task<List<Message>> GetMessagesFromChatAsync(ChatBase chat, DateTime loadMessagesBeforeDate = default)
     {
         var messages = new List<Message>();
 
-        var messageBases = await _client.Messages_GetHistory(chat.ToInputPeer());
+        var messageBases = await _client.Messages_GetHistory(chat.ToInputPeer(), offset_date: loadMessagesBeforeDate);
         foreach (var messageBase in messageBases.Messages.OrderBy(x => x.Date))
             if (messageBase is Message message)
                 messages.Add(message);
