@@ -1,13 +1,14 @@
-﻿using TL;
+﻿using OrderGiv3r.ContentBackuper.Interfaces;
+using TL;
 using WTelegram;
 
-namespace OrderGiv3r.Bot;
+namespace OrderGiv3r.ContentBackuper;
 
-public class TdlibService
+public class TdlibService : ITdlibService
 {
     private Client _client { get; set; }
     private User _user { get; set; }
-    
+
     public TdlibService(Client client, User user)
     {
         _client = client;

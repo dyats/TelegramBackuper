@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="WTelegramClient" Version="2.5.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\OrderGiv3r.VideoDownloader\OrderGiv3r.VideoDownloader.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using OrderGiv3r.Bot;
-using OrderGiv3r.VideoDownloader;
-using OrderGiv3r.VideoDownloader.Interfaces;
+using OrderGiv3r.ContentBackuper;
+using OrderGiv3r.ContentBackuper.Interfaces;
 using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
@@ -16,8 +16,16 @@ var appConfig = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false)
             .Build();
 
+string baseUrl = appConfig["baseUrl"];
+string htmlMatchCondition = appConfig["HtmlMatchCondition"];
+int regexMatchGroup = Convert.ToInt32(appConfig["RegexMatchedGroupId"]);
+
+string botToken = appConfig["BotToken"];
+string channelName = appConfig["ChannelName"];
+string siteName = appConfig["SiteName"];
+
 // Bot
-TelegramBotClient bot = new TelegramBotClient(appConfig["BotToken"]);
+TelegramBotClient bot = new TelegramBotClient(botToken);
 BotService botService = new BotService(bot);
 
 var orderGiv3rConfig = new OrderGiv3rConfig(appConfig); 
@@ -28,13 +36,18 @@ WTelegram.Helpers.Log = (i, s1) => { }; // Filter logs a little bit
 var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");
 
-TdlibService tdlibService = new TdlibService(ordergiverClient, user);
-var channelName = appConfig["ChannelName"];
+ITdlibService tdlibService = new TdlibService(ordergiverClient, user);
+
 var channel = await tdlibService.GetChatByNameAsync(channelName);
 if (channel is null)
 {
     throw new Exception($"Channel \"{channelName}\" does not exist.");
 }
+
+var desktopLocation = @$"{appConfig["PathToDownload"]}Telegram Channels Backup\";
+var newDirectory = $@"{channel.Title}";
+var destination = desktopLocation + newDirectory;
+IBackupService backupService = new BackupService(ordergiverClient, tdlibService, destination, siteName);
 
 List<Message> messages = new List<Message>();
 bool anyLeft = true;
@@ -51,9 +64,6 @@ while (anyLeft)
     }
 }
 
-var desktopLocation = @$"{appConfig["PathToDownload"]}Telegram Channels Backup\";
-var newDirectory = $@"{channel.Title}";
-var destination = desktopLocation + newDirectory;
 
 var linksDestination = $@"{destination}\links.txt";
 var videoNumbers = new List<int>();
@@ -61,7 +71,7 @@ await using (var linksStream = new FileStream(linksDestination, FileMode.Create)
 {
     foreach (var message in messages)
     {
-        if (message.message.Contains(appConfig["SiteName"]))
+        if (message.message.Contains(siteName))
         {
             var link = Regex.Match(message.message, RegexCondition.Link).Value;
             var videoNumber = Regex.Match(link, RegexCondition.NumbersInTheEnd).Value;
@@ -75,57 +85,19 @@ await using (var linksStream = new FileStream(linksDestination, FileMode.Create)
         }
         else if (message.media is MessageMediaDocument { document: Document document })
         {
-            var videosDestination = @$"{destination}\Videos";
-            Directory.CreateDirectory(videosDestination);
-
-            int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
-            var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
-            if (Directory.GetFiles(videosDestination, document.id + ".*").Length == 0)
-            {
-                Console.WriteLine("Downloading video" + fileName);
-                await using var fileStream = File.Create(GeneratePathToDownload(videosDestination, fileName));
-                var type = await ordergiverClient.DownloadFileAsync(document, fileStream);
-                fileStream.Close();
-                Console.WriteLine("Download of the video finished");
-            }
+            await backupService.DownloadVideoFromTgAsync(document);
         }
         else if (message.media is MessageMediaPhoto { photo: Photo photo })
         {
-            var photosDestionation = @$"{destination}\Photos";
-            Directory.CreateDirectory(photosDestionation);
-
-            var fileName = $@"{photo.id}.jpg";
-            if (Directory.GetFiles(photosDestionation, photo.id + ".*").Length == 0)
-            {
-                Console.WriteLine("Downloading photo" + fileName);
-                await using var fs = File.Create(GeneratePathToDownload(photosDestionation, fileName));
-                var type = await ordergiverClient.DownloadFileAsync(photo, fs);
-                fs.Close();
-                Console.WriteLine("Download oh the photo finished.");
-                if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
-                    File.Move(GeneratePathToDownload(photosDestionation, fileName), GeneratePathToDownload(photosDestionation, photo.id.ToString(), type.ToString()), true); // rename extension
-            }
+            await backupService.DownloadPhotoFromTgAsync(photo);
         }
     }
 }
 
-IVideoDownloaderService videoDownloader = new VideoDownloaderService();
+
 foreach(var number in videoNumbers)
 {
-    var siteDownloadsDestination = @$"{destination}\Videos\{appConfig["SiteName"]}";
-    Directory.CreateDirectory(siteDownloadsDestination);
-    var downloadedVideosDestionation = @$"{siteDownloadsDestination}\{number}.{appConfig["VideoFormat"]}";
-    if (Directory.GetFiles(siteDownloadsDestination, number + ".*").Length == 0)
-    {
-        Console.WriteLine($"Video {number} downloading started.");
-        await videoDownloader.DownloadVideoAsync(appConfig["BaseUrl"] + number, downloadedVideosDestionation, appConfig["HtmlMatchCondition"], Convert.ToInt32(appConfig["RegexMatchedGroupId"]));
-        Console.WriteLine($"Video {number} downloaded.");
-    }
+    await backupService.DownloadVideoFromSiteAsync(number, baseUrl, htmlMatchCondition, regexMatchGroup);
 }
 
 Console.ReadLine();
-
-string GeneratePathToDownload(string destination, string fileName, string? fileType = null)
-{
-    return $@"{destination}\{fileName}" + (!string.IsNullOrEmpty(fileType) ? $".{fileType}" : "");
-}

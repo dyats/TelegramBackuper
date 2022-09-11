@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\OrderGiv3r.ContentBackuper\OrderGiv3r.ContentBackuper.csproj" />
       <ProjectReference Include="..\OrderGiv3r.VideoDownloader\OrderGiv3r.VideoDownloader.csproj" />
     </ItemGroup>
 
