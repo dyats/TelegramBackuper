@@ -44,9 +44,10 @@ if (channel is null)
     throw new Exception($"Channel \"{channelName}\" does not exist.");
 }
 
-var desktopLocation = @$"{appConfig["PathToDownload"]}Telegram Channels Backup\";
+var pathToDownload = @$"{appConfig["PathToDownload"]}";
+// todo - If there's a dot(".") in the end of the channel, folder will be created without this dot
 var newDirectory = $@"{channel.Title}";
-var destination = desktopLocation + newDirectory;
+var destination = pathToDownload + newDirectory;
 IBackupService backupService = new BackupService(ordergiverClient, tdlibService, destination, siteName);
 
 List<Message> messages = new List<Message>();
