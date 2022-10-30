@@ -18,12 +18,7 @@ public static class HttpClientExtensions
             if (percentageProgress.Value != currentPercentage)
             {
                 percentageProgress = currentPercentage;
-                Console.WriteLine($"Downloaded: {currentPercentage}%");
-
-                if (currentPercentage == 100)
-                {
-                    Console.WriteLine($"Video downloaded.");
-                }
+                Console.Write($"Downloaded: {currentPercentage}%\r");
             }
         };
 

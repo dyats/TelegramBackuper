@@ -28,7 +28,7 @@ string siteName = appConfig["SiteName"];
 TelegramBotClient bot = new TelegramBotClient(botToken);
 BotService botService = new BotService(bot);
 
-var orderGiv3rConfig = new OrderGiv3rConfig(appConfig); 
+var orderGiv3rConfig = new OrderGiv3rConfig(appConfig);
 
 // Telegram API
 using Client ordergiverClient = new Client(orderGiv3rConfig.GetConfig);
@@ -45,10 +45,9 @@ if (channel is null)
 }
 
 var pathToDownload = @$"{appConfig["PathToDownload"]}";
-// todo - If there's a dot(".") in the end of the channel, folder will be created without this dot
-var newDirectory = $@"{channel.Title}";
+var newDirectory = $@"Channel - [{channel.Title}]";
 var destination = pathToDownload + newDirectory;
-IBackupService backupService = new BackupService(ordergiverClient, tdlibService, destination, siteName);
+IBackupService backupService = new BackupService(ordergiverClient, destination, siteName);
 
 List<Message> messages = new List<Message>();
 bool anyLeft = true;

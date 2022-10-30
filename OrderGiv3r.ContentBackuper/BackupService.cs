@@ -1,6 +1,7 @@
 ﻿using OrderGiv3r.ContentBackuper.Interfaces;
 using OrderGiv3r.VideoDownloader;
 using OrderGiv3r.VideoDownloader.Interfaces;
+using System.Diagnostics.Contracts;
 using TL;
 using WTelegram;
 
@@ -9,33 +10,37 @@ namespace OrderGiv3r.ContentBackuper;
 public class BackupService : IBackupService
 {
     private readonly Client _client;
-    private readonly ITdlibService _tdlibService;
     private readonly IVideoDownloaderService _videoDownloaderService;
+    private readonly Client.ProgressCallback progressCallback;
 
     private readonly string _photosPath;
     private readonly string _videosPath;
     private readonly string _videosSitePath;
 
-    public BackupService(Client client, ITdlibService tdlibService, string generalPath, string siteName)
+    public BackupService(Client client, string generalPath, string siteName)
     {
         _client = client;
-        _tdlibService = tdlibService;
         _videoDownloaderService = new VideoDownloaderService();
         _photosPath = generalPath + @"\Photos";
         _videosPath = generalPath + @"\Videos";
         _videosSitePath = Path.Combine(_videosPath, siteName);
         GenerateDirectoriesForFiles();
+        progressCallback = new Client.ProgressCallback((p, r) => {
+            Console.Write(p * 100 / r + "%\r");
+        });
     }
 
     public async Task DownloadPhotoFromTgAsync(Photo photo)
     {
         var fileName = $@"{photo.id}.jpg";
-        if (Directory.GetFiles(_photosPath, photo.id + ".*").Length == 0)
+        var existingFiles = Directory.GetFiles(_photosPath, photo.id + ".*");
+        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != photo.LargestPhotoSize.FileSize); // if file exists but not downloaded for 100%, let's download it again
+        if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
         {
             Console.WriteLine("Downloading photo" + fileName);
             var finalPath = Path.Combine(_photosPath, fileName);
             await using var fs = File.Create(finalPath);
-            var type = await _client.DownloadFileAsync(photo, fs);
+            var type = await _client.DownloadFileAsync(photo, fs, progress: progressCallback);
             fs.Close();
             Console.WriteLine("Download oh the photo finished.");
             if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
@@ -47,12 +52,14 @@ public class BackupService : IBackupService
     {
         int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
         var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
-        if (Directory.GetFiles(_videosPath, document.id + ".*").Length == 0)
+        var existingFiles = Directory.GetFiles(_videosPath, document.id + ".*")
+            .Where(x => new FileInfo(x).Length == document.size); // if file exists but not downloaded for 100%, let's download it again
+        if (existingFiles.Count() == 0)
         {
             Console.WriteLine("Downloading video" + fileName);
-            var finalPath = Path.Combine(_photosPath, fileName);
+            var finalPath = Path.Combine(_videosPath, fileName);
             await using var fileStream = File.Create(finalPath);
-            var type = await _client.DownloadFileAsync(document, fileStream);
+            var type = await _client.DownloadFileAsync(document, fileStream, progress: progressCallback);
             fileStream.Close();
             Console.WriteLine("Download of the video finished");
         }
