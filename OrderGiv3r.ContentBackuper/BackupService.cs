@@ -1,7 +1,6 @@
 ﻿using OrderGiv3r.ContentBackuper.Interfaces;
 using OrderGiv3r.VideoDownloader;
 using OrderGiv3r.VideoDownloader.Interfaces;
-using System.Diagnostics.Contracts;
 using TL;
 using WTelegram;
 
@@ -35,6 +34,10 @@ public class BackupService : IBackupService
         var fileName = $@"{photo.id}.jpg";
         var existingFiles = Directory.GetFiles(_photosPath, photo.id + ".*");
         var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != photo.LargestPhotoSize.FileSize); // if file exists but not downloaded for 100%, let's download it again
+        if (existingNotFinishedFiles.Any())
+        {
+            Console.WriteLine($"Overwriting file {fileName}");
+        }
         if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
         {
             Console.WriteLine("Downloading photo" + fileName);
@@ -42,7 +45,7 @@ public class BackupService : IBackupService
             await using var fs = File.Create(finalPath);
             var type = await _client.DownloadFileAsync(photo, fs, progress: progressCallback);
             fs.Close();
-            Console.WriteLine("Download oh the photo finished.");
+            Console.WriteLine("Download of the photo finished.");
             if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
                 File.Move(finalPath, Path.Combine(_photosPath, $@"{photo.id}.{type}")); // rename extension
         }
@@ -52,9 +55,13 @@ public class BackupService : IBackupService
     {
         int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
         var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
-        var existingFiles = Directory.GetFiles(_videosPath, document.id + ".*")
-            .Where(x => new FileInfo(x).Length == document.size); // if file exists but not downloaded for 100%, let's download it again
-        if (existingFiles.Count() == 0)
+        var existingFiles = Directory.GetFiles(_videosPath, document.id + ".*");
+        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != document.size); // if file exists but not downloaded for 100%, let's download it again
+        if (existingNotFinishedFiles.Any())
+        {
+            Console.WriteLine($"Overwriting file {fileName}");
+        }
+        if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
         {
             Console.WriteLine("Downloading video" + fileName);
             var finalPath = Path.Combine(_videosPath, fileName);
@@ -68,7 +75,15 @@ public class BackupService : IBackupService
     public async Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup)
     {
         var finalPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
-        if (Directory.GetFiles(_videosSitePath, videoNumber + ".*").Length == 0)
+        var existingFiles = Directory.GetFiles(_videosSitePath, videoNumber + ".*");
+        var httpResponse = await new HttpClient().GetAsync(baseUrl + videoNumber);
+        var videoToDownloadLength = httpResponse.Content.Headers.ContentLength;
+        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != videoToDownloadLength); // if file exists but not downloaded for 100%, let's download it again
+        if (existingNotFinishedFiles.Any())
+        {
+            Console.WriteLine($"Overwriting file {videoNumber}.mp4");
+        }
+        if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
         {
             Console.WriteLine($"Video {videoNumber} downloading started.");
             await _videoDownloaderService.DownloadVideoAsync(baseUrl + videoNumber, finalPath, htmlMatchCondition, regexMatchGroup);
