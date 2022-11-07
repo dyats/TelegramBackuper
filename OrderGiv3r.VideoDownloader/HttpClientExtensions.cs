@@ -26,4 +26,11 @@ public static class HttpClientExtensions
 
         return httpClient;
     }
+
+    public static async Task DownloadFileAsync(this HttpClient httpClient, string url, string pathToDownload)
+    {
+        await using var s = await httpClient.GetStreamAsync(new Uri(url));
+        await using var fs = new FileStream(pathToDownload, FileMode.Create);
+        await s.CopyToAsync(fs);
+    }
 }

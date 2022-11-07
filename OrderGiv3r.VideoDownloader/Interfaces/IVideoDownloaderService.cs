@@ -2,5 +2,5 @@
 
 public interface IVideoDownloaderService
 {
-    Task DownloadVideoAsync(string url, string pathToDownload, string matchCondition, int matchedGroup);
+    Task DownloadVideoAsync(string downloadFromUrl, string pathToDownload);
 }

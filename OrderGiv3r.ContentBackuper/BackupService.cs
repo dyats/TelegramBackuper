@@ -1,6 +1,9 @@
-﻿using OrderGiv3r.ContentBackuper.Interfaces;
+﻿using HtmlAgilityPack;
+using OrderGiv3r.ContentBackuper.Interfaces;
 using OrderGiv3r.VideoDownloader;
 using OrderGiv3r.VideoDownloader.Interfaces;
+using System;
+using System.Net.Http;
 using TL;
 using WTelegram;
 
@@ -11,6 +14,7 @@ public class BackupService : IBackupService
     private readonly Client _client;
     private readonly IVideoDownloaderService _videoDownloaderService;
     private readonly Client.ProgressCallback progressCallback;
+    private readonly HtmlWeb _web;
 
     private readonly string _photosPath;
     private readonly string _videosPath;
@@ -20,13 +24,16 @@ public class BackupService : IBackupService
     {
         _client = client;
         _videoDownloaderService = new VideoDownloaderService();
+        _web = new HtmlWeb();
+
+        progressCallback = new Client.ProgressCallback((p, r) => {
+            Console.Write(p * 100 / r + "%\r");
+        });
+
         _photosPath = generalPath + @"\Photos";
         _videosPath = generalPath + @"\Videos";
         _videosSitePath = Path.Combine(_videosPath, siteName);
         GenerateDirectoriesForFiles();
-        progressCallback = new Client.ProgressCallback((p, r) => {
-            Console.Write(p * 100 / r + "%\r");
-        });
     }
 
     public async Task DownloadPhotoFromTgAsync(Photo photo)
@@ -76,19 +83,24 @@ public class BackupService : IBackupService
     {
         var finalPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
         var existingFiles = Directory.GetFiles(_videosSitePath, videoNumber + ".*");
-        var httpResponse = await new HttpClient().GetAsync(baseUrl + videoNumber);
-        var videoToDownloadLength = httpResponse.Content.Headers.ContentLength;
-        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != videoToDownloadLength); // if file exists but not downloaded for 100%, let's download it again
-        if (existingNotFinishedFiles.Any())
-        {
-            Console.WriteLine($"Overwriting file {videoNumber}.mp4");
-        }
-        if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
-        {
-            Console.WriteLine($"Video {videoNumber} downloading started.");
-            await _videoDownloaderService.DownloadVideoAsync(baseUrl + videoNumber, finalPath, htmlMatchCondition, regexMatchGroup);
-            Console.WriteLine($"Video {videoNumber} downloaded.");
-        }
+        var url = baseUrl + videoNumber;
+        var document = _web.Load(url);
+        var downloadFromUrl = document.GetUrlForDownload(htmlMatchCondition, regexMatchGroup);
+        
+        Console.WriteLine($"Video {videoNumber} downloading started.");
+        await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
+        Console.WriteLine($"Video {videoNumber} downloaded.");
+        //var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != stream.Length); // if file exists but not downloaded for 100%, let's download it again
+        //if (existingNotFinishedFiles.Any())
+        //{
+        //    Console.WriteLine($"Overwriting file {videoNumber}.mp4");
+        //}
+        //if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
+        //{
+        //    Console.WriteLine($"Video {videoNumber} downloading started.");
+        //    await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
+        //    Console.WriteLine($"Video {videoNumber} downloaded.");
+        //}
     }
     
     private void GenerateDirectoriesForFiles()
