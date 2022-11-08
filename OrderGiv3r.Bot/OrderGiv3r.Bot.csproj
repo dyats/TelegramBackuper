@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -11,10 +11,11 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
       <PackageReference Include="Telegram.Bot" Version="18.0.0" />
       <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2" />
-      <PackageReference Include="WTelegramClient" Version="2.5.1" />
+      <PackageReference Include="WTelegramClient" Version="3.0.2" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\OrderGiv3r.ContentBackuper\OrderGiv3r.ContentBackuper.csproj" />
       <ProjectReference Include="..\OrderGiv3r.VideoDownloader\OrderGiv3r.VideoDownloader.csproj" />
     </ItemGroup>
 

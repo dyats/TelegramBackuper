@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderGiv3r.Bot", "OrderGiv3r.Bot\OrderGiv3r.Bot.csproj", "{C10B1D24-8CC7-4FBC-A994-24FF16B213CC}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32819.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderGiv3r.Bot", "OrderGiv3r.Bot\OrderGiv3r.Bot.csproj", "{C10B1D24-8CC7-4FBC-A994-24FF16B213CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderGiv3r.VideoDownloader", "OrderGiv3r.VideoDownloader\OrderGiv3r.VideoDownloader.csproj", "{64E3A552-D95E-4869-B5C2-92224EBD3FA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderGiv3r.VideoDownloader", "OrderGiv3r.VideoDownloader\OrderGiv3r.VideoDownloader.csproj", "{64E3A552-D95E-4869-B5C2-92224EBD3FA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderGiv3r.ContentBackuper", "OrderGiv3r.ContentBackuper\OrderGiv3r.ContentBackuper.csproj", "{4C33046C-2351-450D-A704-3CFC1B3518DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,15 @@ Global
 		{64E3A552-D95E-4869-B5C2-92224EBD3FA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64E3A552-D95E-4869-B5C2-92224EBD3FA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64E3A552-D95E-4869-B5C2-92224EBD3FA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C33046C-2351-450D-A704-3CFC1B3518DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C33046C-2351-450D-A704-3CFC1B3518DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C33046C-2351-450D-A704-3CFC1B3518DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C33046C-2351-450D-A704-3CFC1B3518DF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {01237CD2-8792-46E2-81B5-1231D6AC90F9}
 	EndGlobalSection
 EndGlobal

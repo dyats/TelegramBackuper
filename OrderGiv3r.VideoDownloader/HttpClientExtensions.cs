@@ -18,17 +18,19 @@ public static class HttpClientExtensions
             if (percentageProgress.Value != currentPercentage)
             {
                 percentageProgress = currentPercentage;
-                Console.WriteLine($"Downloaded: {currentPercentage}%");
-
-                if (currentPercentage == 100)
-                {
-                    Console.WriteLine($"Video downloaded.");
-                }
+                Console.Write($"Downloaded: {currentPercentage}%\r");
             }
         };
 
         var httpClient = new HttpClient(ph);
 
         return httpClient;
+    }
+
+    public static async Task DownloadFileAsync(this HttpClient httpClient, string url, string pathToDownload)
+    {
+        await using var s = await httpClient.GetStreamAsync(new Uri(url));
+        await using var fs = new FileStream(pathToDownload, FileMode.Create);
+        await s.CopyToAsync(fs);
     }
 }
