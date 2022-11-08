@@ -1,3 +1,3 @@
 # OrderGiv3r
 
-Bot created for filtering & sorting data on my private Telegram channels.
+Bot created for downloading, filtering & sorting data from Telegram channels.
