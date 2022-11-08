@@ -2,8 +2,6 @@
 using OrderGiv3r.ContentBackuper.Interfaces;
 using OrderGiv3r.VideoDownloader;
 using OrderGiv3r.VideoDownloader.Interfaces;
-using System;
-using System.Net.Http;
 using TL;
 using WTelegram;
 
@@ -86,21 +84,22 @@ public class BackupService : IBackupService
         var url = baseUrl + videoNumber;
         var document = _web.Load(url);
         var downloadFromUrl = document.GetUrlForDownload(htmlMatchCondition, regexMatchGroup);
-        
-        Console.WriteLine($"Video {videoNumber} downloading started.");
-        await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
-        Console.WriteLine($"Video {videoNumber} downloaded.");
-        //var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != stream.Length); // if file exists but not downloaded for 100%, let's download it again
-        //if (existingNotFinishedFiles.Any())
-        //{
-        //    Console.WriteLine($"Overwriting file {videoNumber}.mp4");
-        //}
-        //if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
-        //{
-        //    Console.WriteLine($"Video {videoNumber} downloading started.");
-        //    await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
-        //    Console.WriteLine($"Video {videoNumber} downloaded.");
-        //}
+
+        var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength;
+
+        // if file exists but not downloaded for 100%, let's download it again
+        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != contentLegnthToDownload);
+        if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
+        {
+            if (existingNotFinishedFiles.Any())
+            {
+                Console.WriteLine($"Overwriting file {videoNumber}.mp4");
+            }
+
+            Console.WriteLine($"Video {videoNumber} downloading started.");
+            await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
+            Console.WriteLine($"Video {videoNumber} downloaded.");
+        }
     }
     
     private void GenerateDirectoriesForFiles()
