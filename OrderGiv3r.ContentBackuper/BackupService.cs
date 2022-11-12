@@ -1,28 +1,27 @@
 ﻿using HtmlAgilityPack;
 using OrderGiv3r.ContentBackuper.Interfaces;
-using OrderGiv3r.VideoDownloader;
-using OrderGiv3r.VideoDownloader.Interfaces;
 using TL;
 using WTelegram;
+using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
 
 namespace OrderGiv3r.ContentBackuper;
 
 public class BackupService : IBackupService
 {
     private readonly Client _client;
-    private readonly IVideoDownloaderService _videoDownloaderService;
     private readonly Client.ProgressCallback progressCallback;
     private readonly HtmlWeb _web;
+    private readonly HttpClient _httpClient;
 
     private readonly string _photosPath;
     private readonly string _videosPath;
     private readonly string _videosSitePath;
 
-    public BackupService(Client client, string generalPath, string siteName)
+    public BackupService(Client client, string generalPath, string baseAddress, string siteName)
     {
         _client = client;
-        _videoDownloaderService = new VideoDownloaderService();
         _web = new HtmlWeb();
+        _httpClient = CreateHttpClient(baseAddress);
 
         progressCallback = new Client.ProgressCallback((p, r) => {
             Console.Write(p * 100 / r + "%\r");
@@ -79,7 +78,7 @@ public class BackupService : IBackupService
 
     public async Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup)
     {
-        var finalPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
+        var downloadToPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
         var existingFiles = Directory.GetFiles(_videosSitePath, videoNumber + ".*");
         var url = baseUrl + videoNumber;
         var document = _web.Load(url);
@@ -97,7 +96,7 @@ public class BackupService : IBackupService
             }
 
             Console.WriteLine($"Video {videoNumber} downloading started.");
-            await _videoDownloaderService.DownloadVideoAsync(downloadFromUrl, finalPath);
+            await _httpClient.DownloadFileAsync(downloadFromUrl, downloadToPath);
             Console.WriteLine($"Video {videoNumber} downloaded.");
         }
     }
