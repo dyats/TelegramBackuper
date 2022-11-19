@@ -47,21 +47,20 @@ if (channel is null)
 var pathToDownload = @$"{appConfig["PathToDownload"]}";
 var newDirectory = $@"Channel - [{channel.Title}]";
 var destination = pathToDownload + newDirectory;
-IBackupService backupService = new BackupService(ordergiverClient, destination, siteName);
+IBackupService backupService = new BackupService(ordergiverClient, destination, baseUrl, siteName);
 
 List<Message> messages = new List<Message>();
 bool anyLeft = true;
 while (anyLeft)
 {
-    var olderMessages = await tdlibService.GetMessagesFromChatAsync(channel, messages?.FirstOrDefault()?.Date ?? DateTime.UtcNow);
+    var olderMessages = await tdlibService.GetMessagesFromChatAsync(channel, messages.FirstOrDefault()?.Date ?? DateTime.UtcNow);
     if (olderMessages is null || !olderMessages.Any() || olderMessages.Count() == 1)
     {
         anyLeft = false;
+        continue;
     }
-    else
-    {
-        messages?.InsertRange(0, olderMessages);
-    }
+
+    messages.InsertRange(0, olderMessages);
 }
 
 
