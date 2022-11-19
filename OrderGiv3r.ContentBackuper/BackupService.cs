@@ -38,12 +38,14 @@ public class BackupService : IBackupService
         var fileName = $@"{photo.id}.jpg";
         var existingFiles = Directory.GetFiles(_photosPath, photo.id + ".*");
         var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != photo.LargestPhotoSize.FileSize); // if file exists but not downloaded for 100%, let's download it again
-        if (existingNotFinishedFiles.Any())
-        {
-            Console.WriteLine($"Overwriting file {fileName}");
-        }
+        
         if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
         {
+            if (existingNotFinishedFiles.Any())
+            {
+                Console.WriteLine($"Overwriting file {fileName}");
+            }
+
             Console.WriteLine("Downloading photo" + fileName);
             var finalPath = Path.Combine(_photosPath, fileName);
             await using var fs = File.Create(finalPath);
@@ -61,12 +63,14 @@ public class BackupService : IBackupService
         var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
         var existingFiles = Directory.GetFiles(_videosPath, document.id + ".*");
         var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != document.size); // if file exists but not downloaded for 100%, let's download it again
-        if (existingNotFinishedFiles.Any())
-        {
-            Console.WriteLine($"Overwriting file {fileName}");
-        }
+
         if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
         {
+            if (existingNotFinishedFiles.Any())
+            {
+                Console.WriteLine($"Overwriting file {fileName}");
+            }
+
             Console.WriteLine("Downloading video" + fileName);
             var finalPath = Path.Combine(_videosPath, fileName);
             await using var fileStream = File.Create(finalPath);
