@@ -7,4 +7,5 @@ public interface IBackupService
     Task DownloadPhotoFromTgAsync(Photo photo);
     Task DownloadVideoFromTgAsync(Document document);
     Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup);
+    Task DownloadVideoFromTwitterAsync(string link);
 }

@@ -31,7 +31,7 @@ public class BotService
     {
         if (update.Type == UpdateType.Message)
         {
-            if (update.Message.Type == MessageType.Text)
+            if (update.Message?.Type == MessageType.Text)
             {
                 var chatId = update.Message.Chat.Id;
                 var chatName = update.Message.Chat.FirstName +
@@ -47,7 +47,7 @@ public class BotService
         }
         else if (update.Type == UpdateType.ChannelPost)
         {
-            if (update.ChannelPost.Type == MessageType.Text)
+            if (update.ChannelPost?.Type == MessageType.Text)
             {
                 var channelId = update.ChannelPost.Chat.Id;
                 var channelName = update.ChannelPost.Chat.Title;

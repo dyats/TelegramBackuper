@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 using TL;
+using Tweetinvi;
 using WTelegram;
 
 Console.InputEncoding = Encoding.UTF8;
@@ -16,13 +17,17 @@ var appConfig = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false)
             .Build();
 
-string baseUrl = appConfig["baseUrl"];
-string htmlMatchCondition = appConfig["HtmlMatchCondition"];
-int regexMatchGroup = Convert.ToInt32(appConfig["RegexMatchedGroupId"]);
+string baseUrl = appConfig["baseUrl"]!;
+string htmlMatchCondition = appConfig["HtmlMatchCondition"]!;
+int regexMatchGroup = Convert.ToInt32(appConfig["RegexMatchedGroupId"])!;
 
-string botToken = appConfig["BotToken"];
-string channelName = appConfig["ChannelName"];
-string siteName = appConfig["SiteName"];
+string botToken = appConfig["BotToken"]!;
+string channelName = appConfig["ChannelName"]!;
+string siteName = appConfig["SiteName"]!;
+
+string twitterApiKey = appConfig["Twitter:ApiKey"]!;
+string twitterApiSecret = appConfig["Twitter:ApiSecret"]!;
+string twitterBearerToken = appConfig["Twitter:BearerToken"]!;
 
 // Bot
 TelegramBotClient bot = new TelegramBotClient(botToken);
@@ -44,16 +49,19 @@ if (channel is null)
     throw new Exception($"Channel \"{channelName}\" does not exist.");
 }
 
+// Twitter Api
+var twitterClient = new TwitterClient(twitterApiKey, twitterApiSecret, twitterBearerToken);
+
 var pathToDownload = @$"{appConfig["PathToDownload"]}";
 var newDirectory = $@"Channel - [{channel.Title}]";
 var destination = pathToDownload + newDirectory;
-IBackupService backupService = new BackupService(ordergiverClient, destination, baseUrl, siteName);
+IBackupService backupService = new BackupService(ordergiverClient, twitterClient, destination, baseUrl, siteName);
 
 List<Message> messages = new List<Message>();
 bool anyLeft = true;
 while (anyLeft)
 {
-    var olderMessages = await tdlibService.GetMessagesFromChatAsync(channel, messages.FirstOrDefault()?.Date ?? DateTime.UtcNow);
+    var olderMessages = await tdlibService.GetMessagesFromChatAsync(channel, messages.FirstOrDefault()?.Date.AddMilliseconds(-1) ?? DateTime.UtcNow);
     if (olderMessages is null || !olderMessages.Any() || olderMessages.Count() == 1)
     {
         anyLeft = false;
@@ -66,6 +74,8 @@ while (anyLeft)
 
 var linksDestination = $@"{destination}\links.txt";
 var videoNumbers = new List<int>();
+
+var twitterLinks = new List<string>();
 await using (var linksStream = new FileStream(linksDestination, FileMode.Create))
 {
     foreach (var message in messages)
@@ -82,6 +92,11 @@ await using (var linksStream = new FileStream(linksDestination, FileMode.Create)
             var newLineBytes = Encoding.UTF8.GetBytes(Environment.NewLine);
             await linksStream.WriteAsync(newLineBytes);
         }
+        else if (message.message.Contains("twitter"))
+        {
+            var link = Regex.Match(message.message, RegexCondition.Link).Value;
+            twitterLinks.Add(link);
+        }
         else if (message.media is MessageMediaDocument { document: Document document })
         {
             await backupService.DownloadVideoFromTgAsync(document);
@@ -93,8 +108,12 @@ await using (var linksStream = new FileStream(linksDestination, FileMode.Create)
     }
 }
 
+foreach (var link in twitterLinks)
+{
+    await backupService.DownloadVideoFromTwitterAsync(link);
+}
 
-foreach(var number in videoNumbers)
+foreach (var number in videoNumbers)
 {
     await backupService.DownloadVideoFromSiteAsync(number, baseUrl, htmlMatchCondition, regexMatchGroup);
 }
