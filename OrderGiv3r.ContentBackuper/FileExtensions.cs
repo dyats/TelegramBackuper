@@ -1,7 +1,4 @@
-﻿using System.Runtime.ExceptionServices;
-using TL.Methods;
-
-namespace OrderGiv3r.ContentBackuper;
+﻿namespace OrderGiv3r.ContentBackuper;
 
 public static class FileExtensions
 {
