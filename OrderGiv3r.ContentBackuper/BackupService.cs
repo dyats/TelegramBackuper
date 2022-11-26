@@ -46,18 +46,10 @@ public class BackupService : IBackupService
         var telegramPhotosPath = Path.Combine(_photosPath, "telegram");
         Directory.CreateDirectory(telegramPhotosPath); // For photos from telegram
 
-        var fileName = $@"{photo.id}.jpg";
-        var existingFiles = Directory.GetFiles(telegramPhotosPath, photo.id + ".*");
-        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != photo.LargestPhotoSize.FileSize); // if file exists but not downloaded for 100%, let's download it again
-        
-        if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
+        var fileName = $@"{photo.id}.jpeg";
+        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramPhotosPath, fileName), photo.LargestPhotoSize.FileSize))
         {
-            if (existingNotFinishedFiles.Any())
-            {
-                Console.WriteLine($"Overwriting file {fileName}");
-            }
-
-            Console.WriteLine("Downloading photo" + fileName);
+            Console.WriteLine("Downloading photo " + fileName);
             var finalPath = Path.Combine(telegramPhotosPath, fileName);
             await using var fs = File.Create(finalPath);
             var type = await _client.DownloadFileAsync(photo, fs, progress: progressCallback);
@@ -75,17 +67,10 @@ public class BackupService : IBackupService
 
         int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
         var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
-        var existingFiles = Directory.GetFiles(telegramVideosPath, document.id + ".*");
-        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != document.size); // if file exists but not downloaded for 100%, let's download it again
 
-        if (existingFiles.Count() == 0 || existingNotFinishedFiles.Any())
+        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramVideosPath, fileName), document.size))
         {
-            if (existingNotFinishedFiles.Any())
-            {
-                Console.WriteLine($"Overwriting file {fileName}");
-            }
-
-            Console.WriteLine("Downloading video" + fileName);
+            Console.WriteLine("Downloading video " + fileName);
             var finalPath = Path.Combine(telegramVideosPath, fileName);
             await using var fileStream = File.Create(finalPath);
             var type = await _client.DownloadFileAsync(document, fileStream, progress: progressCallback);
@@ -97,54 +82,41 @@ public class BackupService : IBackupService
     public async Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup)
     {
         var downloadToPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
-        var existingFiles = Directory.GetFiles(_videosSitePath, videoNumber + ".*");
         var url = baseUrl + videoNumber;
         var document = _web.Load(url);
         var downloadFromUrl = document.GetUrlForDownload(htmlMatchCondition, regexMatchGroup);
 
-        var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength;
-
-        // if file exists but not downloaded for 100%, let's download it again
-        var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != contentLegnthToDownload);
-        if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
+        var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength!.Value;
+        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(downloadToPath, contentLegnthToDownload))
         {
-            if (existingNotFinishedFiles.Any())
-            {
-                Console.WriteLine($"Overwriting file {videoNumber}.mp4");
-            }
-
             Console.WriteLine($"Video {videoNumber} downloading started.");
             await _httpClient.DownloadFileAsync(downloadFromUrl, downloadToPath);
             Console.WriteLine($"Video {videoNumber} downloaded.");
         }
     }
 
-    public async Task DownloadVideoFromTwitterAsync(string link)
+    public async Task DownloaFileFromTwitterAsync(long tweetId)
     {
+        var twitterPhotosPath = Path.Combine(_photosPath, "twitter");
+        Directory.CreateDirectory(twitterPhotosPath);
+
         var twitterVideosPath = Path.Combine(_videosPath, "twitter");
         Directory.CreateDirectory(twitterVideosPath);
 
-        var tweetId = Regex.Match(link, "(^.*)/(\\d*)").Groups[2].Value;
-
-        var tweet = await _twitterClient.Tweets.GetTweetAsync(Convert.ToInt64(tweetId));
+        var tweet = await _twitterClient.Tweets.GetTweetAsync(tweetId);
 
         foreach(var media in tweet.Media)
         {
-            var existingFiles = Directory.GetFiles(twitterVideosPath, tweetId + ".*");
+            var downloadFromUrl = media.VideoDetails is null
+                ? media.MediaURLHttps // photo url
+                : media.VideoDetails.Variants.MaxBy(x => x.Bitrate)!.URL; // video url
+            var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength!.Value;
 
             if (media.VideoDetails is null)
             {
-                var downloadFromUrl = media.MediaURLHttps;
-                var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength;
-                var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != contentLegnthToDownload);
-                if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
+                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterPhotosPath, tweetId + ".jpg"), contentLegnthToDownload))
                 {
-                    if (existingNotFinishedFiles.Any())
-                    {
-                        Console.WriteLine($"Overwriting file {tweetId}.jpg");
-                    }
-
-                    var finalPath = Path.Combine(twitterVideosPath, tweetId + ".jpg");
+                    var finalPath = Path.Combine(twitterPhotosPath, tweetId + ".jpg");
                     Console.WriteLine($"Photo {tweetId}.jpg downloading started.");
                     await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
                     Console.WriteLine($"Photo {tweetId}.jpg downloaded.");
@@ -155,15 +127,8 @@ public class BackupService : IBackupService
             var file = media.VideoDetails.Variants.MaxBy(x => x.Bitrate);
             if (file is not null)
             {
-                var downloadFromUrl = file.URL; var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength;
-                var existingNotFinishedFiles = existingFiles.Where(x => new FileInfo(x).Length != contentLegnthToDownload);
-                if (existingFiles.Length == 0 || existingNotFinishedFiles.Any())
+                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterVideosPath, tweetId + ".mp4"), contentLegnthToDownload))
                 {
-                    if (existingNotFinishedFiles.Any())
-                    {
-                        Console.WriteLine($"Overwriting file {tweetId}.jpg");
-                    }
-
                     var finalPath = Path.Combine(twitterVideosPath, tweetId + ".mp4");
                     Console.WriteLine($"Video {tweetId}.mp4 downloading started.");
                     await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);

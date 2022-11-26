@@ -71,46 +71,37 @@ while (anyLeft)
     messages.InsertRange(0, olderMessages);
 }
 
-
 var linksDestination = $@"{destination}\links.txt";
 var videoNumbers = new List<int>();
-
 var twitterLinks = new List<string>();
-await using (var linksStream = new FileStream(linksDestination, FileMode.Create))
-{
-    foreach (var message in messages)
-    {
-        if (message.message.Contains(siteName))
-        {
-            var link = Regex.Match(message.message, RegexCondition.Link).Value;
-            var videoNumber = Regex.Match(link, RegexCondition.NumbersInTheEnd).Value;
-            videoNumbers.Add(Convert.ToInt32(videoNumber));
 
-            var videoNumberBytes = Encoding.UTF8.GetBytes(videoNumber);
-            Console.WriteLine(videoNumber);
-            await linksStream.WriteAsync(videoNumberBytes);
-            var newLineBytes = Encoding.UTF8.GetBytes(Environment.NewLine);
-            await linksStream.WriteAsync(newLineBytes);
-        }
-        else if (message.message.Contains("twitter"))
-        {
-            var link = Regex.Match(message.message, RegexCondition.Link).Value;
-            twitterLinks.Add(link);
-        }
-        else if (message.media is MessageMediaDocument { document: Document document })
-        {
-            await backupService.DownloadVideoFromTgAsync(document);
-        }
-        else if (message.media is MessageMediaPhoto { photo: Photo photo })
-        {
-            await backupService.DownloadPhotoFromTgAsync(photo);
-        }
+foreach (var message in messages)
+{
+    if (message.message.Contains(siteName))
+    {
+        var link = Regex.Match(message.message, RegexCondition.Link).Value;
+        var videoNumber = Regex.Match(link, RegexCondition.NumbersInTheEnd).Value;
+        videoNumbers.Add(Convert.ToInt32(videoNumber));
+    }
+    else if (message.message.Contains("twitter"))
+    {
+        var link = Regex.Match(message.message, RegexCondition.Link).Value;
+        twitterLinks.Add(link);
+    }
+    else if (message.media is MessageMediaDocument { document: Document document })
+    {
+        await backupService.DownloadVideoFromTgAsync(document);
+    }
+    else if (message.media is MessageMediaPhoto { photo: Photo photo })
+    {
+        await backupService.DownloadPhotoFromTgAsync(photo);
     }
 }
 
 foreach (var link in twitterLinks)
 {
-    await backupService.DownloadVideoFromTwitterAsync(link);
+    var tweetId = Regex.Match(link, RegexCondition.Twitter.TweetId).Groups[2].Value;
+    await backupService.DownloaFileFromTwitterAsync(Convert.ToInt64(tweetId));
 }
 
 foreach (var number in videoNumbers)
