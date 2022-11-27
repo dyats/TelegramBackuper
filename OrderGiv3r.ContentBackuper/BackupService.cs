@@ -1,11 +1,13 @@
 ﻿using HtmlAgilityPack;
 using OrderGiv3r.ContentBackuper.Interfaces;
-using System.Text.RegularExpressions;
+using Reddit.Controllers;
+using Reddit;
 using TL;
 using Tweetinvi;
 using WTelegram;
 using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
 using Document = TL.Document;
+using Newtonsoft.Json.Linq;
 
 namespace OrderGiv3r.ContentBackuper;
 
@@ -17,18 +19,20 @@ public class BackupService : IBackupService
     private readonly HttpClient _httpClient;
 
     private readonly TwitterClient _twitterClient;
+    private readonly RedditClient _redditClient;
 
     private readonly string _photosPath;
     private readonly string _videosPath;
     private readonly string _videosSitePath;
 
-    public BackupService(Client client, TwitterClient twitterClient, string generalPath, string baseAddress, string siteName)
+    public BackupService(Client client, TwitterClient twitterClient, RedditClient redditClient, string generalPath, string baseAddress, string siteName)
     {
         _client = client;
         _web = new HtmlWeb();
         _httpClient = CreateHttpClient(baseAddress);
 
         _twitterClient = twitterClient;
+        _redditClient = redditClient;
 
         progressCallback = new Client.ProgressCallback((p, r) =>
         {
@@ -133,6 +137,78 @@ public class BackupService : IBackupService
                     Console.WriteLine($"Video {tweetId}.mp4 downloading started.");
                     await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
                     Console.WriteLine($"Video {tweetId}.mp4 downloaded.");
+                }
+            }
+        }
+    }
+
+    public async Task DownloaFileFromRedditAsync(string postFullName)
+    {
+        var redditPhotosPath = Path.Combine(_photosPath, "reddit");
+        Directory.CreateDirectory(redditPhotosPath);
+
+        var redditVideosPath = Path.Combine(_videosPath, "reddit");
+        Directory.CreateDirectory(redditVideosPath);
+
+        var redditPost = _redditClient.Post(postFullName).About() as LinkPost;
+
+        if (redditPost is not null)
+        {
+            if (redditPost.Preview is null)
+            {
+                Console.WriteLine("There's no media file in this post OR we couldn't fetch them.");
+                return;
+            }
+
+            redditPost.Preview.TryGetValue("reddit_video_preview", out var redditVideoPreviewObj);
+            if (redditVideoPreviewObj is not null)
+            {
+                var fallbackUrl = redditVideoPreviewObj["fallback_url"]!.ToString();
+                var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(fallbackUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength!.Value;
+                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(redditVideosPath, postFullName + ".mp4"), contentLegnthToDownload))
+                {
+                    var finalPath = Path.Combine(redditVideosPath, postFullName + ".mp4");
+                    Console.WriteLine($"Video {postFullName}.mp4 downloading started.");
+                    await _httpClient.DownloadFileAsync(fallbackUrl, finalPath);
+                    Console.WriteLine($"Video {postFullName}.mp4 downloaded.");
+                }
+                return;
+            }
+
+            // TODO - fetch URL media file in Media
+            //redditPost.Listing.Media
+
+            redditPost.Preview.TryGetValue("images", out var imagesObj);
+            foreach(var item in imagesObj)
+            {
+                var isVideo = true;
+                var variants = item.SelectToken("variants");
+                JToken? file;
+                file = variants?.SelectToken("mp4");
+                if (file is null)
+                {
+                    file = variants?.SelectToken("gif");
+                }
+                if (file is null)
+                {
+                    file = item;
+                    isVideo = false;
+                }
+
+                var sourcePhotoObj = file.SelectToken("source");
+                if (sourcePhotoObj is not null)
+                {
+                    var extension = isVideo ? ".mp4" : ".jpg";
+                    var sourceUrl = sourcePhotoObj["url"]!.ToString();
+                    var result = await new HttpClient().GetAsync(new Uri(sourceUrl), HttpCompletionOption.ResponseHeadersRead);
+                    var contentLegnthToDownload = result.Content.Headers.ContentLength!.Value;
+                    if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(redditPhotosPath, postFullName + extension), contentLegnthToDownload))
+                    {
+                        var finalPath = Path.Combine(redditPhotosPath, postFullName + extension);
+                        Console.WriteLine($"Photo {postFullName + extension} downloading started.");
+                        await _httpClient.DownloadFileAsync(sourceUrl, finalPath);
+                        Console.WriteLine($"Photo {postFullName + extension}.jpg downloaded.");
+                    }
                 }
             }
         }
