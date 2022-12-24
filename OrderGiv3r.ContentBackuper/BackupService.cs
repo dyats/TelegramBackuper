@@ -86,7 +86,15 @@ public class BackupService : IBackupService
         var document = _web.Load(url);
         var downloadFromUrl = document.GetUrlForDownload(htmlMatchCondition, regexMatchGroup);
 
-        var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength!.Value;
+        // most likely that video was deleted
+        if (string.IsNullOrEmpty(downloadFromUrl))
+        {
+            Console.WriteLine($"Video {videoNumber} does not exist anymore.");
+            return;
+        }
+
+        var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead);
+        var contentLegnthToDownload = requestResult.Content.Headers.ContentLength!.Value;
         if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(downloadToPath, contentLegnthToDownload))
         {
             Console.WriteLine($"Video {videoNumber} downloading started.");
@@ -110,7 +118,8 @@ public class BackupService : IBackupService
             var downloadFromUrl = media.VideoDetails is null
                 ? media.MediaURLHttps // photo url
                 : media.VideoDetails.Variants.MaxBy(x => x.Bitrate)!.URL; // video url
-            var contentLegnthToDownload = (await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead)).Content.Headers.ContentLength!.Value;
+            var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead);
+            var contentLegnthToDownload = requestResult.Content.Headers.ContentLength!.Value;
 
             if (media.VideoDetails is null)
             {
