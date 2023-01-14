@@ -113,35 +113,46 @@ public class BackupService : IBackupService
 
         var tweet = await _twitterClient.Tweets.GetTweetAsync(tweetId);
 
-        foreach(var media in tweet.Media)
+        foreach (var media in tweet.Media.Select((value, i) => new { i, value }))
         {
-            var downloadFromUrl = media.VideoDetails is null
-                ? media.MediaURLHttps // photo url
-                : media.VideoDetails.Variants.MaxBy(x => x.Bitrate)!.URL; // video url
+            var index = tweet.Media.Count() > 1
+                ? $"({media.i + 1})" // start from 1 not from 0
+                : string.Empty;
+
+            var downloadFromUrl = media.value.VideoDetails is null
+                ? media.value.MediaURLHttps // photo url
+                : media.value.VideoDetails.Variants.MaxBy(x => x.Bitrate)!.URL; // video url
             var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead);
+
+            if (!requestResult.Content.Headers.ContentLength.HasValue)
+            {
+                Console.WriteLine($"Content Length is not specified. Check tweet {tweetId} manually.");
+                return;
+            }
+
             var contentLegnthToDownload = requestResult.Content.Headers.ContentLength!.Value;
 
-            if (media.VideoDetails is null)
+            if (media.value.VideoDetails is null)
             {
-                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterPhotosPath, tweetId + ".jpg"), contentLegnthToDownload))
+                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterPhotosPath, tweetId + index + ".jpg"), contentLegnthToDownload))
                 {
-                    var finalPath = Path.Combine(twitterPhotosPath, tweetId + ".jpg");
-                    Console.WriteLine($"Photo {tweetId}.jpg downloading started.");
+                    var finalPath = Path.Combine(twitterPhotosPath, tweetId + index + ".jpg");
+                    Console.WriteLine($"Photo {tweetId}{index}.jpg downloading started.");
                     await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
-                    Console.WriteLine($"Photo {tweetId}.jpg downloaded.");
+                    Console.WriteLine($"Photo {tweetId}{index}.jpg downloaded.");
                 }
                 continue;
             }
 
-            var file = media.VideoDetails.Variants.MaxBy(x => x.Bitrate);
+            var file = media.value.VideoDetails.Variants.MaxBy(x => x.Bitrate);
             if (file is not null)
             {
-                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterVideosPath, tweetId + ".mp4"), contentLegnthToDownload))
+                if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(twitterVideosPath, tweetId + index + ".mp4"), contentLegnthToDownload))
                 {
-                    var finalPath = Path.Combine(twitterVideosPath, tweetId + ".mp4");
-                    Console.WriteLine($"Video {tweetId}.mp4 downloading started.");
+                    var finalPath = Path.Combine(twitterVideosPath, tweetId + index + ".mp4");
+                    Console.WriteLine($"Video {tweetId}{index}.mp4 downloading started.");
                     await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
-                    Console.WriteLine($"Video {tweetId}.mp4 downloaded.");
+                    Console.WriteLine($"Video {tweetId}{index}.mp4 downloaded.");
                 }
             }
         }
