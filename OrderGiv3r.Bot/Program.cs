@@ -75,6 +75,7 @@ var linksDestination = $@"{destination}\links.txt";
 var videoNumbers = new List<int>();
 var twitterLinks = new List<string>();
 
+Console.WriteLine("[TELEGRAM]");
 foreach (var message in messages)
 {
     if (message.message.Contains(siteName))
@@ -90,16 +91,18 @@ foreach (var message in messages)
     }
     else if (message.media is MessageMedia)
     {
-        await backupService.DownloadDocumentFromTgAsync(message.media);
+        await backupService.DownloadFromTgAsync(message.media);
     }
 }
 
+Console.WriteLine("[TWITTER]");
 foreach (var link in twitterLinks)
 {
     var tweetId = Regex.Match(link, RegexCondition.Twitter.TweetId).Groups[2].Value;
     await backupService.DownloaFileFromTwitterAsync(Convert.ToInt64(tweetId));
 }
 
+Console.WriteLine($"[{siteName.ToUpper()}]");
 foreach (var number in videoNumbers)
 {
     await backupService.DownloadVideoFromSiteAsync(number, baseUrl, htmlMatchCondition, regexMatchGroup);
