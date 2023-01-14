@@ -5,6 +5,7 @@ using Tweetinvi;
 using WTelegram;
 using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
 using Document = TL.Document;
+using MimeTypes;
 
 namespace OrderGiv3r.ContentBackuper;
 
@@ -40,41 +41,18 @@ public class BackupService : IBackupService
         GenerateDirectoriesForFiles();
     }
 
-    public async Task DownloadPhotoFromTgAsync(Photo photo)
+    public async Task DownloadFromTgAsync(MessageMedia media)
     {
-        var telegramPhotosPath = Path.Combine(_photosPath, "telegram");
-        Directory.CreateDirectory(telegramPhotosPath); // For photos from telegram
-
-        var fileName = $@"{photo.id}.jpeg";
-        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramPhotosPath, fileName), photo.LargestPhotoSize.FileSize))
+        if (media is MessageMediaPhoto { photo: Photo photo })
         {
-            Console.WriteLine("Downloading photo " + fileName);
-            var finalPath = Path.Combine(telegramPhotosPath, fileName);
-            await using var fs = File.Create(finalPath);
-            var type = await _client.DownloadFileAsync(photo, fs, progress: progressCallback);
-            fs.Close();
-            Console.WriteLine("Download of the photo finished.");
-            if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
-                File.Move(finalPath, Path.Combine(telegramPhotosPath, $@"{photo.id}.{type}")); // rename extension
+            await DownloadPhotoFromTgAsync(photo);
         }
-    }
-
-    public async Task DownloadVideoFromTgAsync(Document document)
-    {
-        var telegramVideosPath = Path.Combine(_videosPath, "telegram");
-        Directory.CreateDirectory(telegramVideosPath); // For videos, GIFs from telegram
-
-        int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
-        var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
-
-        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramVideosPath, fileName), document.size))
+        else if (media is MessageMediaDocument { document: Document document })
         {
-            Console.WriteLine("Downloading video " + fileName);
-            var finalPath = Path.Combine(telegramVideosPath, fileName);
-            await using var fileStream = File.Create(finalPath);
-            var type = await _client.DownloadFileAsync(document, fileStream, progress: progressCallback);
-            fileStream.Close();
-            Console.WriteLine("Download of the video finished");
+            var fileType = MimeTypeMap.GetExtension(document.mime_type);
+            var fileName = $"{document.id}{fileType}";
+
+            await DownloadDocumentFromTgAsync(document, fileName);
         }
     }
 
@@ -157,10 +135,72 @@ public class BackupService : IBackupService
         }
     }
 
+    /// <summary>
+    /// Downloads photos
+    /// </summary>
+    /// <param name="photo"></param>
+    /// <returns></returns>
+    private async Task DownloadPhotoFromTgAsync(Photo photo)
+    {
+        var telegramPhotosPath = GetPathAndDocumentType("telegram", "image/jpeg").path;
+
+        var fileName = $@"{photo.id}.jpeg";
+        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramPhotosPath, fileName), photo.LargestPhotoSize.FileSize))
+        {
+            Console.WriteLine("Downloading photo " + fileName);
+            var finalPath = Path.Combine(telegramPhotosPath, fileName);
+            await using var fs = File.Create(finalPath);
+            var type = await _client.DownloadFileAsync(photo, fs, progress: progressCallback);
+            fs.Close();
+            Console.WriteLine("Download of the photo finished.");
+            if (type is not Storage_FileType.unknown and not Storage_FileType.partial)
+                File.Move(finalPath, Path.Combine(telegramPhotosPath, $@"{photo.id}.{type}")); // rename extension
+        }
+    }
+
+    /// <summary>
+    /// Downloads documents including videos, GIFs and photos(if they saved without compression as file)
+    /// </summary>
+    /// <param name="document"></param>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
+    private async Task DownloadDocumentFromTgAsync(Document document, string fileName)
+    {
+        var directory = GetPathAndDocumentType("telegram", document.mime_type);
+
+        if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(directory.path, fileName), document.size))
+        {
+            Console.WriteLine($"Downloading {directory.documentType} {fileName}");
+            var finalPath = Path.Combine(directory.path, fileName);
+            await using var fileStream = File.Create(finalPath);
+            var type = await _client.DownloadFileAsync(document, fileStream, progress: progressCallback);
+            fileStream.Close();
+            Console.WriteLine($"Download of the {directory.documentType} finished");
+        }
+    }
+
     private void GenerateDirectoriesForFiles()
     {
         Directory.CreateDirectory(_photosPath); // For photos
         Directory.CreateDirectory(_videosPath); // For TG videos, GIFs etc.
         Directory.CreateDirectory(_videosSitePath); // For videos from sites
+    }
+
+    private (string path, string documentType) GetPathAndDocumentType(string folderName, string mimeType)
+    {
+        var path = "";
+        var documentType = "";
+        if (Constants.MimeTypes.Photos.Values.Contains(mimeType))
+        {
+            path = Path.Combine(_photosPath, folderName);
+            documentType = "photo";
+        }
+        else if (Constants.MimeTypes.Videos.Values.Contains(mimeType))
+        {
+            path = Path.Combine(_videosPath, folderName);
+            documentType = "video";
+        }
+        Directory.CreateDirectory(path);
+        return (path, documentType);
     }
 }
