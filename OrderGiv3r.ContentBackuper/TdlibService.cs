@@ -7,12 +7,10 @@ namespace OrderGiv3r.ContentBackuper;
 public class TdlibService : ITdlibService
 {
     private Client _client { get; set; }
-    private User _user { get; set; }
 
-    public TdlibService(Client client, User user)
+    public TdlibService(Client client)
     {
         _client = client;
-        _user = user;
     }
 
     public async Task<Messages_Chats> GetAllChatsAsync()
