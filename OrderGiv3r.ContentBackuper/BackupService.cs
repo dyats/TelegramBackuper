@@ -5,6 +5,8 @@ using Tweetinvi;
 using WTelegram;
 using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
 using Document = TL.Document;
+using static OrderGiv3r.ContentBackuper.Constants;
+using MimeTypes;
 
 namespace OrderGiv3r.ContentBackuper;
 
@@ -40,10 +42,29 @@ public class BackupService : IBackupService
         GenerateDirectoriesForFiles();
     }
 
+    public async Task DownloadDocumentFromTgAsync(MessageMedia media)
+    {
+        if (media is MessageMediaPhoto { photo: Photo photo })
+        {
+            await DownloadPhotoFromTgAsync(photo);
+        }
+        else if (media is MessageMediaDocument { document: Document document })
+        {
+            var fileType = MimeTypeMap.GetExtension(document.mime_type);
+            var fileName =$"{document.id}.{fileType}";
+
+            if (MimeTypes.Photos.Contains(document.mime_type))
+            {
+                DownloadPhotoFromTgAsync()
+            }
+
+            await DownloadVideoFromTgAsync(document);
+        }
+    }
+
     public async Task DownloadPhotoFromTgAsync(Photo photo)
     {
-        var telegramPhotosPath = Path.Combine(_photosPath, "telegram");
-        Directory.CreateDirectory(telegramPhotosPath); // For photos from telegram
+        var telegramPhotosPath = GeneratePathForFile("telegram", )
 
         var fileName = $@"{photo.id}.jpeg";
         if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramPhotosPath, fileName), photo.LargestPhotoSize.FileSize))
@@ -61,11 +82,7 @@ public class BackupService : IBackupService
 
     public async Task DownloadVideoFromTgAsync(Document document)
     {
-        var telegramVideosPath = Path.Combine(_videosPath, "telegram");
-        Directory.CreateDirectory(telegramVideosPath); // For videos, GIFs from telegram
-
-        int slash = document.mime_type.IndexOf('/'); // quick & dirty conversion from MIME type to file extension
-        var fileName = slash > 0 ? $"{document.id}.{document.mime_type[(slash + 1)..]}" : $"{document.id}.bin";
+        var telegramVideosPath = GeneratePathForFile("telegram", document.mime_type);
 
         if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(Path.Combine(telegramVideosPath, fileName), document.size))
         {
@@ -162,5 +179,21 @@ public class BackupService : IBackupService
         Directory.CreateDirectory(_photosPath); // For photos
         Directory.CreateDirectory(_videosPath); // For TG videos, GIFs etc.
         Directory.CreateDirectory(_videosSitePath); // For videos from sites
+    }
+
+    private string GeneratePathForFile(string folderName, Storage_FileType fileType)
+    {
+        string path = "";
+        MimeTypes.MimeTypeMap.
+        if (MimeTypes.Photos..Contains(fileType))
+        {
+            path = Path.Combine(_photosPath, folderName);
+        }
+        else if (MimeTypes.Videos.Contains(fileType))
+        {
+            path = Path.Combine(_videosPath, folderName);
+        }
+        Directory.CreateDirectory(path);
+        return path;
     }
 }

@@ -10,6 +10,6 @@ public static class Constants
         public static class Twitter
         {
             public const string TweetId = "(^.*)/(\\d*)";
-        } 
+        }
     }
 }

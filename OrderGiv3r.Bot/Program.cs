@@ -88,13 +88,9 @@ foreach (var message in messages)
         var link = Regex.Match(message.message, RegexCondition.Link).Value;
         twitterLinks.Add(link);
     }
-    else if (message.media is MessageMediaDocument { document: Document document })
+    else if (message.media is MessageMedia)
     {
-        await backupService.DownloadVideoFromTgAsync(document);
-    }
-    else if (message.media is MessageMediaPhoto { photo: Photo photo })
-    {
-        await backupService.DownloadPhotoFromTgAsync(photo);
+        await backupService.DownloadDocumentFromTgAsync(message.media);
     }
 }
 
