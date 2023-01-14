@@ -8,7 +8,7 @@ namespace OrderGiv3r.Bot;
 public class BotService
 {
     private TelegramBotClient _bot { get; set; }
-    
+
     private ReceiverOptions _receiverOptions = new ReceiverOptions()
     {
         AllowedUpdates = new UpdateType[]
@@ -23,7 +23,7 @@ public class BotService
     public BotService(TelegramBotClient botClient)
     {
         _bot = botClient;
-        
+
         _bot.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions);
     }
 
