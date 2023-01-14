@@ -41,7 +41,7 @@ WTelegram.Helpers.Log = (i, s1) => { }; // Filter logs a little bit
 var user = await ordergiverClient.LoginUserIfNeeded();
 Console.WriteLine($"We are logged-in as {user.username ?? user.first_name + " " + user.last_name} (id {user.id})");
 
-ITdlibService tdlibService = new TdlibService(ordergiverClient, user);
+ITdlibService tdlibService = new TdlibService(ordergiverClient);
 
 var channel = await tdlibService.GetChatByNameAsync(channelName);
 if (channel is null)
