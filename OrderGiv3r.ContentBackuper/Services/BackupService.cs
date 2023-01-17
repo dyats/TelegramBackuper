@@ -1,13 +1,14 @@
 ﻿using HtmlAgilityPack;
-using OrderGiv3r.ContentBackuper.Interfaces;
+using MimeTypes;
+using OrderGiv3r.Application.Extensions;
+using OrderGiv3r.Application.Services.Interfaces;
 using TL;
 using Tweetinvi;
 using WTelegram;
-using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
+using static OrderGiv3r.Application.Extensions.HttpClientExtensions;
 using Document = TL.Document;
-using MimeTypes;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace OrderGiv3r.Application.Services;
 
 public class BackupService : IBackupService
 {
@@ -41,7 +42,7 @@ public class BackupService : IBackupService
         GenerateDirectoriesForFiles();
     }
 
-    public async Task DownloadFromTgAsync(MessageMedia media)
+    public async Task DownloadFromTgAsync(MessageMedia media, CancellationToken cancellationToken = default)
     {
         if (media is MessageMediaPhoto { photo: Photo photo })
         {
@@ -56,7 +57,7 @@ public class BackupService : IBackupService
         }
     }
 
-    public async Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup)
+    public async Task DownloadVideoFromSiteAsync(int videoNumber, string baseUrl, string htmlMatchCondition, int regexMatchGroup, CancellationToken cancellationToken = default)
     {
         var downloadToPath = Path.Combine(_videosSitePath, $@"{videoNumber}.mp4");
         var url = baseUrl + videoNumber;
@@ -70,17 +71,17 @@ public class BackupService : IBackupService
             return;
         }
 
-        var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead);
+        var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         var contentLegnthToDownload = requestResult.Content.Headers.ContentLength!.Value;
         if (!FileExtensions.IsFileAlreadyExistsAndFullyDownloaded(downloadToPath, contentLegnthToDownload))
         {
             Console.WriteLine($"Video {videoNumber} downloading started.");
-            await _httpClient.DownloadFileAsync(downloadFromUrl, downloadToPath);
+            await _httpClient.DownloadFileAsync(downloadFromUrl, downloadToPath, cancellationToken);
             Console.WriteLine($"Video {videoNumber} downloaded.");
         }
     }
 
-    public async Task DownloaFileFromTwitterAsync(long tweetId)
+    public async Task DownloaFileFromTwitterAsync(long tweetId, CancellationToken cancellationToken = default)
     {
         var twitterPhotosPath = Path.Combine(_photosPath, "twitter");
         Directory.CreateDirectory(twitterPhotosPath);
@@ -99,7 +100,7 @@ public class BackupService : IBackupService
             var downloadFromUrl = media.value.VideoDetails is null
                 ? media.value.MediaURLHttps // photo url
                 : media.value.VideoDetails.Variants.MaxBy(x => x.Bitrate)!.URL; // video url
-            var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead);
+            var requestResult = await new HttpClient().GetAsync(new Uri(downloadFromUrl), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (!requestResult.Content.Headers.ContentLength.HasValue)
             {
@@ -115,7 +116,7 @@ public class BackupService : IBackupService
                 {
                     var finalPath = Path.Combine(twitterPhotosPath, tweetId + index + ".jpg");
                     Console.WriteLine($"Photo {tweetId}{index}.jpg downloading started.");
-                    await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
+                    await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath, cancellationToken);
                     Console.WriteLine($"Photo {tweetId}{index}.jpg downloaded.");
                 }
                 continue;
@@ -128,7 +129,7 @@ public class BackupService : IBackupService
                 {
                     var finalPath = Path.Combine(twitterVideosPath, tweetId + index + ".mp4");
                     Console.WriteLine($"Video {tweetId}{index}.mp4 downloading started.");
-                    await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath);
+                    await _httpClient.DownloadFileAsync(downloadFromUrl, finalPath, cancellationToken);
                     Console.WriteLine($"Video {tweetId}{index}.mp4 downloaded.");
                 }
             }

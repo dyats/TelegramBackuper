@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using OrderGiv3r.Application.Services;
+using OrderGiv3r.Application.Services.Interfaces;
 using OrderGiv3r.Bot;
-using OrderGiv3r.ContentBackuper;
-using OrderGiv3r.ContentBackuper.Interfaces;
 using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
@@ -89,23 +89,23 @@ foreach (var message in messages)
         var link = Regex.Match(message.message, RegexCondition.Link).Value;
         twitterLinks.Add(link);
     }
-    else if (message.media is MessageMedia)
-    {
-        await backupService.DownloadFromTgAsync(message.media);
-    }
+    //else if (message.media is MessageMedia)
+    //{
+    //    await backupService.DownloadFromTgAsync(message.media);
+    //}
 }
 
-Console.WriteLine("[TWITTER]");
-foreach (var link in twitterLinks)
-{
-    var tweetId = Regex.Match(link, RegexCondition.Twitter.TweetId).Groups[2].Value;
-    await backupService.DownloaFileFromTwitterAsync(Convert.ToInt64(tweetId));
-}
+//Console.WriteLine("[TWITTER]");
+//foreach (var link in twitterLinks)
+//{
+//    var tweetId = Regex.Match(link, RegexCondition.Twitter.TweetId).Groups[2].Value;
+//    await backupService.DownloaFileFromTwitterAsync(Convert.ToInt64(tweetId));
+//}
 
-Console.WriteLine($"[{siteName.ToUpper()}]");
-foreach (var number in videoNumbers)
-{
-    await backupService.DownloadVideoFromSiteAsync(number, baseUrl, htmlMatchCondition, regexMatchGroup);
-}
+//Console.WriteLine($"[{siteName.ToUpper()}]");
+//foreach (var number in videoNumbers)
+//{
+//    await backupService.DownloadVideoFromSiteAsync(number, baseUrl, htmlMatchCondition, regexMatchGroup);
+//}
 
 Console.ReadLine();

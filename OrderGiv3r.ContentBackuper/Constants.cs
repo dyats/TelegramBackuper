@@ -1,6 +1,6 @@
 ﻿using TL;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace OrderGiv3r.Application;
 
 public class Constants
 {

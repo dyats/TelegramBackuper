@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Handlers;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace OrderGiv3r.Application.Extensions;
 
 public static class HttpClientExtensions
 {
@@ -28,7 +28,7 @@ public static class HttpClientExtensions
         return httpClient;
     }
 
-    public static async Task DownloadFileAsync(this HttpClient httpClient, string url, string pathToDownload)
+    public static async Task DownloadFileAsync(this HttpClient httpClient, string url, string pathToDownload, CancellationToken cancellationToken = default)
     {
         await using var s = await httpClient.GetStreamAsync(new Uri(url));
         await using var fs = new FileStream(pathToDownload, FileMode.Create);
