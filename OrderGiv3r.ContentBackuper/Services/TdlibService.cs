@@ -13,22 +13,22 @@ public class TdlibService : ITdlibService
         _client = client;
     }
 
-    public async Task<Messages_Chats> GetAllChatsAsync()
+    public async Task<Messages_Chats> GetAllChatsAsync(CancellationToken cancellationToken = default)
     {
         var allChats = await _client.Messages_GetAllChats();
 
         return allChats;
     }
 
-    public async Task<ChatBase?> GetChatByNameAsync(string chatName)
+    public async Task<ChatBase?> GetChatByNameAsync(string chatName, CancellationToken cancellationToken = default)
     {
-        var usersChats = await GetAllChatsAsync();
+        var usersChats = await GetAllChatsAsync(cancellationToken);
         var chat = usersChats.chats.FirstOrDefault(x => x.Value.Title.ToLower() == chatName.ToLower()).Value;
 
         return chat;
     }
 
-    public async Task<List<Message>> GetMessagesFromChatAsync(ChatBase chat, DateTime loadMessagesBeforeDate = default)
+    public async Task<List<Message>> GetMessagesFromChatAsync(ChatBase chat, DateTime loadMessagesBeforeDate = default, CancellationToken cancellationToken = default)
     {
         var messages = new List<Message>();
 

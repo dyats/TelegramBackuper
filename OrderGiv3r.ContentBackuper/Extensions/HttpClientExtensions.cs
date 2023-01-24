@@ -30,8 +30,8 @@ public static class HttpClientExtensions
 
     public static async Task DownloadFileAsync(this HttpClient httpClient, string url, string pathToDownload, CancellationToken cancellationToken = default)
     {
-        await using var s = await httpClient.GetStreamAsync(new Uri(url));
+        await using var s = await httpClient.GetStreamAsync(new Uri(url), cancellationToken);
         await using var fs = new FileStream(pathToDownload, FileMode.Create);
-        await s.CopyToAsync(fs);
+        await s.CopyToAsync(fs, cancellationToken);
     }
 }

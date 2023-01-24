@@ -27,7 +27,7 @@ public class BotService
         _bot.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions);
     }
 
-    private async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken = default)
     {
         if (update.Type == UpdateType.Message)
         {
@@ -60,7 +60,7 @@ public class BotService
         }
     }
 
-    private async Task ErrorHandler(ITelegramBotClient botClient, Exception ex, CancellationToken cancellationToken)
+    private async Task ErrorHandler(ITelegramBotClient botClient, Exception ex, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
