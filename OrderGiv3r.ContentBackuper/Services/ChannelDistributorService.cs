@@ -1,11 +1,19 @@
 ﻿using OrderGiv3r.Application.Services.Interfaces;
+using TL;
 
 namespace OrderGiv3r.Application.Services;
 
 public class ChannelDistributorService : IChannelDistributorService
 {
-    public Task DistributeContent(CancellationToken cancellationToken = default)
+    private readonly ITdlibService _tdlibService;
+
+    public ChannelDistributorService(ITdlibService tdlibService)
     {
-        throw new NotImplementedException();
+        _tdlibService = tdlibService;
+    }
+
+    public async Task DistributeContentAsync(InputPeer channelId, string message, CancellationToken cancellationToken = default)
+    {
+        await _tdlibService.SendMessageToChannelAsync(channelId, message);
     }
 }

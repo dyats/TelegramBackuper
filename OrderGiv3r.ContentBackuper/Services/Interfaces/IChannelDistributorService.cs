@@ -1,6 +1,8 @@
-﻿namespace OrderGiv3r.Application.Services.Interfaces;
+﻿using TL;
+
+namespace OrderGiv3r.Application.Services.Interfaces;
 
 public interface IChannelDistributorService
 {
-    Task DistributeContent(CancellationToken cancellationToken = default);
+    Task DistributeContentAsync(InputPeer channelId, string message, CancellationToken cancellationToken = default);
 }

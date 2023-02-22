@@ -39,4 +39,9 @@ public class TdlibService : ITdlibService
 
         return messages;
     }
+
+    public async Task SendMessageToChannelAsync(InputPeer channelId, string message, CancellationToken cancellationToken = default)
+    {
+        await _client.SendMessageAsync(channelId, message);
+    }
 }

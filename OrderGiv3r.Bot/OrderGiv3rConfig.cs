@@ -12,10 +12,10 @@ public class OrderGiv3rConfig
 
     public OrderGiv3rConfig(IConfigurationRoot appConfig)
     {
-        ApiId = appConfig["ApiId"];
-        ApiHash = appConfig["ApiHash"];
-        PhoneNumber = appConfig["PhoneNumber"];
-        Password = appConfig["Password"];
+        ApiId = appConfig["Telegram:Api:ApiId"];
+        ApiHash = appConfig["Telegram:Api:ApiHash"];
+        PhoneNumber = appConfig["Telegram:Credentials:PhoneNumber"];
+        Password = appConfig["Telegram:Credentials:Password"];
     }
 
     public string GetConfig(string what) =>
