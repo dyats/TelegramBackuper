@@ -1,8 +1,8 @@
-﻿using OrderGiv3r.ContentBackuper.Interfaces;
+﻿using TgBckp.ContentBackuper.Interfaces;
 using TL;
 using WTelegram;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace TgBckp.ContentBackuper;
 
 public class TdlibService : ITdlibService
 {

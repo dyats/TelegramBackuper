@@ -1,1 +1,0 @@
-﻿global using static OrderGiv3r.Bot.Constants;

@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace TgBckp.ContentBackuper;
 
 public static class HtmlExtensions
 {

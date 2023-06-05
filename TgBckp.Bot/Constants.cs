@@ -1,4 +1,4 @@
-﻿namespace OrderGiv3r.Bot;
+﻿namespace TgBckp.Bot;
 
 public static class Constants
 {

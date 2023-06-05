@@ -3,7 +3,7 @@ using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace OrderGiv3r.Bot;
+namespace TgBckp.Bot;
 
 public class BotService
 {

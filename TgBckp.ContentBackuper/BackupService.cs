@@ -1,14 +1,14 @@
 ﻿using HtmlAgilityPack;
-using OrderGiv3r.ContentBackuper.Interfaces;
 using TL;
 using Tweetinvi;
 using WTelegram;
-using static OrderGiv3r.ContentBackuper.HttpClientExtensions;
+using static TgBckp.ContentBackuper.HttpClientExtensions;
 using Document = TL.Document;
 using MimeTypes;
 using Tweetinvi.Exceptions;
+using TgBckp.ContentBackuper.Interfaces;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace TgBckp.ContentBackuper;
 
 public class BackupService : IBackupService
 {
@@ -141,7 +141,7 @@ public class BackupService : IBackupService
                 }
             }
         }
-        catch(TwitterException ex)
+        catch (TwitterException ex)
         {
             Console.WriteLine(ex.Message);
             Console.WriteLine("----------------------------------------------------------------");
@@ -150,7 +150,7 @@ public class BackupService : IBackupService
     }
 
     /// <summary>
-    /// Downloads photos
+    /// Downloads photos that stored as media files
     /// </summary>
     /// <param name="photo"></param>
     /// <returns></returns>

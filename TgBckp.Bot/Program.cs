@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
-using OrderGiv3r.Bot;
-using OrderGiv3r.ContentBackuper;
-using OrderGiv3r.ContentBackuper.Interfaces;
 using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
+using TgBckp.Bot;
+using TgBckp.ContentBackuper;
+using TgBckp.ContentBackuper.Interfaces;
 using TL;
 using Tweetinvi;
 using WTelegram;
@@ -33,7 +33,7 @@ string twitterBearerToken = appConfig["Twitter:BearerToken"]!;
 TelegramBotClient bot = new TelegramBotClient(botToken);
 BotService botService = new BotService(bot);
 
-var orderGiv3rConfig = new OrderGiv3rConfig(appConfig);
+var orderGiv3rConfig = new BotConfig(appConfig);
 
 // Telegram API
 using Client ordergiverClient = new Client(orderGiv3rConfig.GetConfig);

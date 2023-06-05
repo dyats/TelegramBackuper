@@ -1,4 +1,4 @@
-﻿namespace OrderGiv3r.ContentBackuper;
+﻿namespace TgBckp.ContentBackuper;
 
 public static class FileExtensions
 {

@@ -9,14 +9,14 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-      <PackageReference Include="Telegram.Bot" Version="18.0.0" />
+      <PackageReference Include="Telegram.Bot" Version="19.0.0" />
       <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2" />
       <PackageReference Include="TweetinviAPI" Version="5.0.4" />
-      <PackageReference Include="WTelegramClient" Version="3.1.3" />
+      <PackageReference Include="WTelegramClient" Version="3.5.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\OrderGiv3r.ContentBackuper\OrderGiv3r.ContentBackuper.csproj" />
+      <ProjectReference Include="..\TgBckp.ContentBackuper\TgBckp.ContentBackuper.csproj" />
     </ItemGroup>
 
     <ItemGroup>

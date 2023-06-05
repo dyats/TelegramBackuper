@@ -1,6 +1,6 @@
 ﻿using TL;
 
-namespace OrderGiv3r.ContentBackuper.Interfaces;
+namespace TgBckp.ContentBackuper.Interfaces;
 
 public interface IBackupService
 {

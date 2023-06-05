@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Handlers;
 
-namespace OrderGiv3r.ContentBackuper;
+namespace TgBckp.ContentBackuper;
 
 public static class HttpClientExtensions
 {

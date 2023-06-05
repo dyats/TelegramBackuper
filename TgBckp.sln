@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderGiv3r.Bot", "OrderGiv3r.Bot\OrderGiv3r.Bot.csproj", "{C10B1D24-8CC7-4FBC-A994-24FF16B213CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TgBckp.Bot", "TgBckp.Bot\TgBckp.Bot.csproj", "{C10B1D24-8CC7-4FBC-A994-24FF16B213CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderGiv3r.ContentBackuper", "OrderGiv3r.ContentBackuper\OrderGiv3r.ContentBackuper.csproj", "{4C33046C-2351-450D-A704-3CFC1B3518DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TgBckp.ContentBackuper", "TgBckp.ContentBackuper\TgBckp.ContentBackuper.csproj", "{4C33046C-2351-450D-A704-3CFC1B3518DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

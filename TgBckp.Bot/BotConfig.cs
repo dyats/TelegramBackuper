@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace OrderGiv3r.Bot;
+namespace TgBckp.Bot;
 
-public class OrderGiv3rConfig
+public class BotConfig
 {
     public static string ApiId;
     public static string ApiHash;
@@ -10,12 +10,12 @@ public class OrderGiv3rConfig
     public static string Password;
 
 
-    public OrderGiv3rConfig(IConfigurationRoot appConfig)
+    public BotConfig(IConfigurationRoot appConfig)
     {
-        ApiId = appConfig["ApiId"];
-        ApiHash = appConfig["ApiHash"];
-        PhoneNumber = appConfig["PhoneNumber"];
-        Password = appConfig["Password"];
+        ApiId = appConfig["ApiId"]!;
+        ApiHash = appConfig["ApiHash"]!;
+        PhoneNumber = appConfig["PhoneNumber"]!;
+        Password = appConfig["Password"]!;
     }
 
     public string GetConfig(string what) =>
